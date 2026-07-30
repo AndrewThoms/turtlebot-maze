@@ -1,16 +1,40 @@
-# CLAUDE.md — Project Guide for Claude Code
+# CLAUDE.md, Project Guide for Claude Code
+
+## Hardware safety
+
+These repos command real machines. Treat every rule here as a hard gate.
+
+- **Never run a command that can move real hardware** unless the user asked for real-hardware
+  operation in this session. That includes any service, launch file, or script whose name
+  contains `hardware`, `real`, `driver`, or `calibrate`, and anything that opens a `/dev/tty*`
+  port. When in doubt, run the simulation variant and say which one you ran.
+- **Simulation is the default.** Develop, test, and reproduce in Gazebo first. Confirm which
+  environment you are pointed at before publishing to `/cmd_vel` or any controller topic.
+- **Always stop what you start.** End every commanded motion sequence with an explicit stop
+  (zero twist on `/cmd_vel`, or halt the controller). If a sequence is interrupted or errors
+  out, publish the stop yourself before doing anything else.
+- **Limits and gains are read-only.** Do not change joint limits, velocity or acceleration
+  caps, controller gains, or safety thresholds (URDF, ros2_control YAML, MoveIt
+  `joint_limits`, `REAL_SPEED_*` / `REAL_THRESHOLD_*`) without the user signing off on the
+  specific values.
+- **Shared GPU etiquette.** Training runs take hours on a shared card. Check `nvidia-smi`
+  before starting, never kill a process you did not start, and launch training detached
+  rather than blocking the session. Prefer the tailnet GPU hosts over the laptop card;
+  gpu-node-2 is offline, use gpu-node-1 or gpu-node-3.
+- **Do not tear down running work.** Never `docker compose down`, prune, or restart
+  containers without checking what is live first (`docker compose ps`, `nvidia-smi`).
 
 ## Project Overview
 
-TurtleBot3 Behavior Demos — a ROS 2 (Jazzy) robotics project demonstrating autonomous navigation using behavior trees. A simulated TurtleBot navigates a house environment searching for colored blocks using vision and Nav2-based navigation.
+TurtleBot3 Behavior Demos, a ROS 2 (Jazzy) robotics project demonstrating autonomous navigation using behavior trees. A simulated TurtleBot navigates a house environment searching for colored blocks using vision and Nav2-based navigation.
 
 ## Repository Layout
 
-- `tb_autonomy/` — ROS 2 package: autonomy behaviors (C++ via BehaviorTree.CPP, Python via py_trees)
-- `tb_worlds/` — ROS 2 package: Gazebo simulation worlds, maps, Nav2 config
-- `docker/` — Dockerfiles (CPU + GPU) and entrypoint scripts
-- `bt_xml/` — Behavior tree XML definitions (naive and queue variants)
-- `.github/workflows/` — CI: Docker build (`docker.yml`) and pre-commit formatting (`format.yml`)
+- `tb_autonomy/`: ROS 2 package: autonomy behaviors (C++ via BehaviorTree.CPP, Python via py_trees)
+- `tb_worlds/`: ROS 2 package: Gazebo simulation worlds, maps, Nav2 config
+- `docker/`: Dockerfiles (CPU + GPU) and entrypoint scripts
+- `tb_autonomy/bt_xml/`: Behavior tree XML definitions (naive and queue variants)
+- `.github/workflows/`: CI: Docker build (`docker.yml`) and pre-commit formatting (`format.yml`)
 
 ## Languages
 
@@ -38,11 +62,11 @@ pre-commit install         # Install as git hook
 ```
 
 Hooks include:
-- `black` — Python formatter
-- `clang-format` v18 — C/C++ formatter
-- `codespell` — Spell checker (ignore list: `atleast,inout,ether`)
-- `yamllint` — YAML linter
-- `markdown-link-check` — Markdown link validator
+- `black`: Python formatter
+- `clang-format` v18: C/C++ formatter
+- `codespell`: Spell checker (ignore list: `atleast,inout,ether`)
+- `yamllint`: YAML linter
+- `markdown-link-check`: Markdown link validator
 - Standard pre-commit checks (AST, YAML, merge conflicts, etc.)
 
 ## Docker
@@ -55,22 +79,15 @@ docker compose up demo-behavior-cpp  # C++ behavior demo
 
 ## Documentation Standards
 
-All architecture and data-flow diagrams **must use Mermaid** — no ASCII art or image files.
+All architecture and data-flow diagrams **must use Mermaid**, no ASCII art or image files.
 This applies to README.md and all other markdown in the repo.
 
-- Use `graph LR` / `graph TD` for flows, `sequenceDiagram` for message exchanges
-- Apply `classDef` to **every** node — never leave siblings unstyled
-- Dark-mode-safe fills with `color:#fff`:
-  - Neutral: `fill:#37474f,stroke:#546e7a`
-  - Blue: `fill:#0277bd,stroke:#01579b`
-  - Green: `fill:#2e7d32,stroke:#1b5e20`
-  - Orange: `fill:#e65100,stroke:#bf360c`
-- Use `rgba(r,g,b,0.2–0.4)` for `rect` in sequence diagrams — never opaque light colors
-- Subgraph labels: plain text only, no special characters or newlines
+- Follow the `mermaid-diagrams` skill for dark-mode-safe styling (classDef on every node,
+  `rgba()` fills for `rect`, plain-text subgraph labels). Do not restate its palette here.
 
 ## Git Workflow
 
-The `main` branch is protected — direct pushes are blocked for everyone including admins.
+The `main` branch is protected, direct pushes are blocked for everyone including admins.
 All changes must go through a pull request.
 
 ```bash
@@ -94,7 +111,7 @@ gh pr create --title "Short title" --body "$(cat <<'EOF'
 EOF
 )"
 
-# 4. Enable auto-merge (merges immediately — no reviewer required)
+# 4. Enable auto-merge (merges immediately, no reviewer required)
 gh pr merge --auto --squash
 ```
 
@@ -103,25 +120,11 @@ Use `--squash` (default), `--merge`, or `--rebase` depending on the change.
 
 ## Issue Tracking
 
-Use `bd` (beads) for task and issue tracking. See [beads documentation](https://github.com/steveyegge/beads).
+Issues live in Jira, project AURA at https://aegean-ai.atlassian.net. Use the Atlassian MCP tools (`mcp__plugin_atlassian_atlassian__*`): `searchJiraIssuesUsingJql` to find work, `getJiraIssue` to read, `createJiraIssue` to file, `addCommentToJiraIssue` to comment, `transitionJiraIssue` to change status. Search for an existing issue before filing a new one.
 
-### Beads Dolt Configuration
+beads, the `bd` CLI, and the per-repo Dolt server are retired. Never run `bd`, never start a Dolt server, and never recreate a `.beads/` directory. The leftover `.beads-archive.zip` and `.dolt/` in this repo are historical artifacts, not live infrastructure.
 
-This repo uses a **local** Dolt server — never a shared/global one.
-
-- **Data directory**: `.beads/dolt` (inside the repo, git-ignored)
-- **Database name**: `beads` (local to this repo's `.beads/dolt/beads`)
-- **Port**: `3320` (unique per-repo, set in `.beads/config.yaml` as `dolt.port`)
-- **Do NOT** point at the shared systemd Dolt data directory (`~/.local/share/beads/dolt/`)
-- **Do NOT** rely on the systemd `beads-dolt` service — each repo manages its own server via `bd`'s idle-monitor
-
-If `bd list` fails with "database not found", verify:
-
-1. `.beads/config.yaml` has `dolt.database: "beads"` and `dolt.port: 3320`
-2. `.beads/metadata.json` matches (`dolt_database`, `dolt_server_port`, `dolt_data_dir` pointing to local `.beads/dolt`)
-3. No other dolt process is squatting on the configured port (`ss -tlnp | grep <port>`)
-
-**Before closing any issue**, always write a summary using `bd update <id> --notes "..."` that includes:
+**Before closing any issue**, add a comment that records:
 - What was done (key changes made, files modified)
 - Root causes found (for bugs)
 - Lessons learned (gotchas, non-obvious behaviour, useful debugging insights)
@@ -131,7 +134,7 @@ This makes closed issues a searchable knowledge base for future debugging sessio
 
 ## Robot Commands via ros-mcp-server
 
-Always use the ros-mcp-server MCP tools (`publish_for_durations`, `publish_once`, etc.) to command the robot — not `docker exec` with `ros2 topic pub`.
+Always use the ros-mcp-server MCP tools (`publish_for_durations`, `publish_once`, etc.) to command the robot, not `docker exec` with `ros2 topic pub`.
 
 Rosbridge has a DDS publisher discovery delay (~5 seconds). When publishing to `/cmd_vel`, prepend 5 warmup messages (1 second each, zero velocity) before the actual motion commands. Without this, `ros_gz_bridge` won't discover the publisher in time and the commands are lost.
 
@@ -159,7 +162,7 @@ publish_for_durations(
 
 ## Key Configuration
 
-- ROS distro: `jazzy` (set in `.env`)
-- TurtleBot model: `3`
-- Behavior tree type: `queue` (or `naive`)
-- Vision target color: `blue` (or `red`, `green`)
+Runtime configuration lives in `.env` at the repo root: ROS distro, TurtleBot model, behavior
+tree type, vision toggle, detector type, and target colour/object. Read that file before
+launching rather than trusting a copy here, and never hardcode a value it already defines.
+Duplicating them in this file is how they drift.
