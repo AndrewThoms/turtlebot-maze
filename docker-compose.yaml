@@ -284,22 +284,25 @@ services:
       dockerfile: docker/Dockerfile.torch.gpu
     network_mode: host
     ipc: host
+
+    # TASK 1 LOCAL FIX:
+    # Run as the host user so the container can write downloaded model files
+    # into the ./detector bind mount.
+    user: "1000:1000"
+
     environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
       - PYTHONUNBUFFERED=1
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+      - HOME=/app
+      - HF_HOME=/app/.cache/huggingface
+
+    # TASK 1 LOCAL FIX:
+    # NVIDIA GPU reservation removed because this machine is running the
+    # detector on CPU. object_detector.py automatically falls back to CPU.
+
     volumes:
       - ./detector:/app
     working_dir: /app
     command: python object_detector.py --confidence 0.3 --model yolov8n.pt --image-key camera/color/image_raw --connect tcp/localhost:7447
-
   # Zenoh → pgvector ingest worker (writes CLIP embeddings to PostgreSQL)
   embedding-ingest:
     build:
@@ -307,8 +310,16 @@ services:
       dockerfile: docker/Dockerfile.torch.gpu
     network_mode: host
     ipc: host
+    user: "1000:1000"    
     environment:
       - PYTHONUNBUFFERED=1
+      - HOME=/app
+      - HF_HOME=/app/.cache/huggingface
+      # TASK 1 LOCAL FIX:
+      # Writable location for OpenCLIP/Hugging Face model downloads.
+      - HOME=/app
+      - HF_HOME=/app/.cache/huggingface
+
     volumes:
       - ./detector:/app
     working_dir: /app

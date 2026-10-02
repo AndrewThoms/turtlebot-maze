@@ -130,8 +130,8 @@ def main():
         "-c",
         "--confidence",
         type=float,
-        default=0.5,
-        help="Minimum detection confidence",
+        default=0.3,  # TASK 1 CHANGE: assignment requires a 0.3 confidence threshold.
+        help="Minimum detection confidence (Task 1: 0.3)",
     )
     parser.add_argument(
         "--image-key",
@@ -198,6 +198,8 @@ def main():
         run_id = f"{socket.gethostname()}-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}"
     print(f"Run ID: {run_id}")
 
+    # TASK 1 REQUIREMENT: YOLOv8 nano pretrained model (80 COCO classes).
+    # The default is yolov8n.pt; confidence is controlled by --confidence (0.3).
     # Load YOLO model
     model = YOLO(args.model)
     print(f"Loaded model: {args.model}")
@@ -217,6 +219,12 @@ def main():
         )
         clip_model = clip_model.to(clip_device).eval()
         clip_embedding_dim = clip_model.visual.output_dim
+        # TASK 1 CHANGE: Task 1 requires 512-dimensional embeddings from
+        # ViT-B-32/laion2b_s34b_b79k. Fail early if a different model is supplied.
+        if clip_embedding_dim != 512:
+            raise ValueError(
+                f"Task 1 requires 512-D CLIP embeddings, got {clip_embedding_dim}"
+            )
         clip_tag = f"{args.clip_model}/{args.clip_pretrained}"
         print(
             f"CLIP embeddings enabled: {clip_tag} "
@@ -232,8 +240,7 @@ def main():
     latest_pose = None  # (x, y, yaw)
     last_keyframe_pose = None  # (x, y, yaw)
     keyframe_id = 0
-    odom_fallback_warned = False
-    startup_time = time.time()
+    # TASK 1 CHANGE: keyframes are strictly odometry-driven; no time-based fallback.
 
     print(
         f"Keyframe gating: dist={keyframe_dist_thresh}m, "
@@ -260,16 +267,16 @@ def main():
         yaw = quaternion_to_yaw(odom_msg.pose.pose.orientation)
         latest_pose = (p.x, p.y, yaw)
 
+    # TASK 1 CHANGE: preserve the ROS image timestamp from sensor_msgs/Image.
+    # The timestamp is encoded as nanoseconds since the ROS epoch.
+    def ros_time_ns(stamp: Time) -> int:
+        return int(stamp.sec) * 1_000_000_000 + int(stamp.nanosec)
+
     def is_keyframe() -> bool:
-        nonlocal last_keyframe_pose, keyframe_id, odom_fallback_warned
+        nonlocal last_keyframe_pose, keyframe_id
+        # TASK 1 CHANGE: do not create keyframes without odometry. This also
+        # guarantees a stationary/no-odom robot produces no keyframes.
         if latest_pose is None:
-            # Fallback: if no odom after 10s, process every frame at max-fps
-            if time.time() - startup_time > 10.0:
-                if not odom_fallback_warned:
-                    print("WARNING: No odom received, falling back to time-based keyframes")
-                    odom_fallback_warned = True
-                keyframe_id += 1
-                return True
             return False
         if last_keyframe_pose is None:
             last_keyframe_pose = latest_pose
@@ -278,9 +285,10 @@ def main():
         dx = latest_pose[0] - last_keyframe_pose[0]
         dy = latest_pose[1] - last_keyframe_pose[1]
         dist = math.sqrt(dx * dx + dy * dy)
-        dyaw = abs(latest_pose[2] - last_keyframe_pose[2])
-        # Normalize angle to [0, pi]
-        dyaw = abs(math.atan2(math.sin(dyaw), math.cos(dyaw)))
+        # TASK 1 CHANGE: compare rotation using the shortest angular distance,
+        # so wrap-around at +/-pi cannot create a false large rotation.
+        dyaw_raw = latest_pose[2] - last_keyframe_pose[2]
+        dyaw = abs(math.atan2(math.sin(dyaw_raw), math.cos(dyaw_raw)))
         if dist >= keyframe_dist_thresh or dyaw >= keyframe_angle_thresh:
             last_keyframe_pose = latest_pose
             keyframe_id += 1
@@ -290,7 +298,8 @@ def main():
     def image_callback(sample):
         nonlocal last_inference_time
 
-        # Rate limit
+        # TASK 1 CHANGE: limit incoming color-image processing to max 10 Hz
+        # (default args.max_fps=10.0), as required by the assignment.
         now = time.time()
         if now - last_inference_time < min_interval:
             return
@@ -340,7 +349,7 @@ def main():
                 }
                 detections.append(det)
 
-                # Crop the detection region for CLIP encoding
+                        # TASK 1 REQUIREMENT: crop every accepted YOLO detection for CLIP.
                 if clip_model is not None:
                     x1, y1, x2, y2 = (
                         int(bbox[0]),
@@ -359,7 +368,7 @@ def main():
                     else:
                         crops.append(None)
 
-        # Batch-encode CLIP embeddings for all crops
+        # TASK 1 REQUIREMENT: process all valid detection crops in one CLIP batch.
         if clip_model is not None and crops:
             valid_indices = [i for i, c in enumerate(crops) if c is not None]
             if valid_indices:
@@ -368,7 +377,7 @@ def main():
                 ).to(clip_device)
                 with torch.no_grad():
                     embeddings = clip_model.encode_image(batch)
-                # L2-normalize for cosine similarity
+                # TASK 1 REQUIREMENT: L2-normalize each 512-D embedding.
                 embeddings = torch.nn.functional.normalize(embeddings, dim=-1)
                 embeddings_np = embeddings.cpu().numpy()
 
@@ -386,9 +395,11 @@ def main():
         # Build keyframe envelope with pose metadata
         pose_data = (
             {
-                "map_x": round(latest_pose[0], 4),
-                "map_y": round(latest_pose[1], 4),
-                "map_yaw": round(latest_pose[2], 4),
+                # TASK 1 CHANGE: odometry is not yet a map-frame pose.
+                # Task 2 will perform the required frame transformation.
+                "odom_x": round(latest_pose[0], 4),
+                "odom_y": round(latest_pose[1], 4),
+                "odom_yaw": round(latest_pose[2], 4),
             }
             if latest_pose
             else {}
@@ -397,10 +408,12 @@ def main():
         for idx, det in enumerate(detections):
             det["det_id"] = f"{run_id}_kf{keyframe_id}_d{idx}"
 
+        # TASK 1 CHANGE: use the camera message timestamp, not Python wall-clock time.
+        image_timestamp_ns = ros_time_ns(img_msg.header.stamp)
         envelope = {
             "run_id": run_id,
             "keyframe_id": keyframe_id,
-            "timestamp": now,
+            "timestamp_ns": image_timestamp_ns,
             **pose_data,
             "detections": detections,
         }
@@ -411,7 +424,7 @@ def main():
             classes = [d["class"] for d in detections]
             print(
                 f"KF#{keyframe_id} Detected: {classes} "
-                f"@ ({pose_data.get('map_x', '?')}, {pose_data.get('map_y', '?')})"
+                f"@ ({pose_data.get('odom_x', '?')}, {pose_data.get('odom_y', '?')})"
             )
 
     odom_sub = session.declare_subscriber(args.odom_key, odom_callback)
