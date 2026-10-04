@@ -112,7 +112,39 @@ def quaternion_to_yaw(q: Quaternion) -> float:
     siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
     cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
     return math.atan2(siny_cosp, cosy_cosp)
+def camera_pose_in_map(robot_pose):
+    """Return camera position and orientation in the map frame."""
+    x, y, yaw = robot_pose
 
+    # Camera translation relative to the robot base.
+    tx = 0.064
+    ty = -0.065
+    tz = 0.094
+
+    c = math.cos(yaw)
+    s = math.sin(yaw)
+
+    # Rotate the fixed camera offset by the robot yaw.
+    camera_x = x + c * tx - s * ty
+    camera_y = y + s * tx + c * ty
+    camera_z = tz
+
+    # Camera link has no additional rotation relative to the base.
+    # Convert the robot yaw to a quaternion.
+    camera_qx = 0.0
+    camera_qy = 0.0
+    camera_qz = math.sin(yaw / 2.0)
+    camera_qw = math.cos(yaw / 2.0)
+
+    return (
+        camera_x,
+        camera_y,
+        camera_z,
+        camera_qx,
+        camera_qy,
+        camera_qz,
+        camera_qw,
+    )
 
 def main():
     parser = argparse.ArgumentParser(description="Zenoh YOLOv8 Object Detector")
@@ -439,6 +471,18 @@ def main():
                 det["map_y"] = round(float(point_map[1]), 4)
                 det["map_z"] = round(float(point_map[2]), 4)
 
+                # Horizontal range and bearing relative to the robot/camera heading.
+                #
+                # bearing_rad = 0 straight ahead
+                # positive bearing = counter-clockwise / left
+                #
+                # range_m is horizontal XY distance, not 3D Euclidean distance.
+                forward = point_3d[2]   # optical z = forward
+                left = -point_3d[0]     # optical x = right, therefore -x = left
+
+                det["bearing_rad"] = round(math.atan2(left, forward), 4)
+                det["range_m"] = round(math.hypot(forward, left), 4)
+
                 detections.append(det)
 
                 # Keep crops aligned one-for-one with accepted detections.
@@ -478,10 +522,23 @@ def main():
                     detections[det_idx]["embedding_dim"] = int(vec.shape[0])
                     detections[det_idx]["embedding_model"] = clip_tag
 
+        camera_pose = camera_pose_in_map(matched_pose)
+
         pose_data = {
-            "odom_x": round(matched_pose[0], 4),
-            "odom_y": round(matched_pose[1], 4),
-            "odom_yaw": round(matched_pose[2], 4),
+            # In this simulation map->odom is identity, so this synchronized
+            # odometry pose is also the robot pose in the map frame.
+            "map_x": round(matched_pose[0], 4),
+            "map_y": round(matched_pose[1], 4),
+            "map_yaw": round(matched_pose[2], 4),
+
+            # Camera pose expressed in the map frame.
+            "camera_map_x": round(camera_pose[0], 4),
+            "camera_map_y": round(camera_pose[1], 4),
+            "camera_map_z": round(camera_pose[2], 4),
+            "camera_qx": round(camera_pose[3], 6),
+            "camera_qy": round(camera_pose[4], 6),
+            "camera_qz": round(camera_pose[5], 6),
+            "camera_qw": round(camera_pose[6], 6),
         }
 
         for idx, det in enumerate(detections):
@@ -501,7 +558,7 @@ def main():
             classes = [d["class"] for d in detections]
             print(
                 f"KF#{keyframe_id} Detected: {classes} "
-                f"@ ({pose_data['odom_x']}, {pose_data['odom_y']}) "
+                f"@ ({pose_data['map_x']}, {pose_data['map_y']}) "
                 f"[sync depth={depth_diff_ms:.1f}ms, odom={odom_diff_ms:.1f}ms]"
             )
 
