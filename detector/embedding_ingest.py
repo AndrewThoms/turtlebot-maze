@@ -76,37 +76,43 @@ def main():
 #task 3 update
     observation_count = 0
 
-    def find_matching_object(class_name, x, y, z):
-        """
-        Find the nearest existing object of the same class within the
-        association-distance threshold.
-        """
+    def find_matching_object(class_name, x, y, z, embedding):
         cur.execute(
             """
-            SELECT object_id, map_x, map_y, map_z,
-                   observation_count, mean_embedding::text,
-                   first_seen_ns
+            SELECT
+                object_id,
+                map_x,
+                map_y,
+                map_z,
+                observation_count,
+                mean_embedding::text,
+                first_seen_ns,
+                mean_embedding <=> %s::vector AS cosine_distance
             FROM semantic_objects
             WHERE class_name = %s
-              AND sqrt(
-                    power(map_x - %s, 2) +
-                    power(map_y - %s, 2) +
-                    power(map_z - %s, 2)
-                  ) <= %s
-            ORDER BY
+            AND sqrt(
                 power(map_x - %s, 2) +
                 power(map_y - %s, 2) +
                 power(map_z - %s, 2)
-            LIMIT 1
+            ) <= %s
+            ORDER BY cosine_distance ASC
             """,
             (
+                str(embedding),
                 class_name,
-                x, y, z,
+                x,
+                y,
+                z,
                 args.association_distance,
-                x, y, z,
             ),
         )
-        return cur.fetchone()
+
+        candidates = cur.fetchall()
+
+        if not candidates:
+            return None
+
+        return candidates[0]
 
     def create_semantic_object(class_name, x, y, z, embedding, seen_at_ns):
         cur.execute(
@@ -142,6 +148,7 @@ def main():
             count,
             old_embedding_text,
             first_seen_ns,
+            cosine_distance,
         ) = row
 
         new_count = count + 1
@@ -155,11 +162,13 @@ def main():
             sep=",",
             dtype=np.float32,
         )
-        new_embedding = np.asarray(embedding, dtype=np.float32)
-
         mean_embedding = (
-            old_embedding * count + new_embedding
+            old_embedding * count + np.asarray(embedding, dtype=np.float32)
         ) / new_count
+
+        norm = np.linalg.norm(mean_embedding)
+        if norm > 0:
+            mean_embedding = mean_embedding / norm
 
         cur.execute(
             """
@@ -184,6 +193,9 @@ def main():
         )
 
         return object_id
+
+    insert_count = 0
+    observation_count = 0
     def detection_callback(sample):
         nonlocal insert_count, observation_count
         try:
@@ -283,6 +295,7 @@ def main():
                 det["map_x"],
                 det["map_y"],
                 det["map_z"],
+                embedding,
             )
 
             if object_row is None:
@@ -358,25 +371,6 @@ def main():
 
             observation_count += 1
             conn.commit()
-            """INSERT INTO detection_embeddings
-                   (run_id, det_id, keyframe_id, class_name, confidence, bbox,
-                    map_x, map_y, map_yaw, embedding_model, embedding)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                   ON CONFLICT (det_id) DO NOTHING""",
-            (
-                    run_id,
-                    det_id,
-                    kf_id,
-                    det["class"],
-                    det["confidence"],
-                    det["bbox"],
-                    map_x,
-                    map_y,
-                    map_yaw,
-                    det.get("embedding_model"),
-                    str(embedding),
-                ),
-            #)
             insert_count += 1
 
         if detections:
