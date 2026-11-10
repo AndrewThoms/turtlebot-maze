@@ -1,0 +1,58 @@
+
+# Assignment 3 - Task 2
+# Built-in laptop webcam calibration
+# OpenCV RMS reprojection error: 0.353 pixels
+
+Camera:
+  name: "Laptop Built-in Webcam"
+  setup: "monocular"
+  model: "perspective"
+
+  # Calibrated intrinsic parameters
+  fx: 1197.92336
+  fy: 1197.99008
+  cx: 993.39273
+  cy: 547.40535
+
+  # Calibrated distortion coefficients
+  k1: 0.13176328
+  k2: -0.15573425
+  p1: -0.00218680
+  p2: 0.00036510
+  k3: -0.07761967
+
+  # Indoor video properties
+  fps: 60.0
+  cols: 1920
+  rows: 1080
+
+  color_order: "RGB"
+
+Preprocessing:
+  min_size: 800
+
+Feature:
+  name: "default ORB feature extraction setting"
+  scale_factor: 1.2
+  num_levels: 8
+  ini_fast_threshold: 20
+  min_fast_threshold: 7
+
+Mapping:
+  backend: "g2o"
+  baseline_dist_thr_ratio: 0.02
+  redundant_obs_ratio_thr: 0.9
+  num_covisibilities_for_landmark_generation: 20
+  num_covisibilities_for_landmark_fusion: 20
+
+Tracking:
+  backend: "g2o"
+
+LoopDetector:
+  backend: "g2o"
+  enabled: true
+
+System:
+  map_format: "msgpack"
+  num_grid_cols: 96
+  num_grid_rows: 48

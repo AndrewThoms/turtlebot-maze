@@ -1,0 +1,13 @@
+aist_map.msg
+results/aist_map.msg
+__pycache__/
+.venv/
+# Large StellaVSLAM map databases
+*.msg
+
+# Python files
+__pycache__/
+.venv/
+
+# Original videos
+*.mp4
