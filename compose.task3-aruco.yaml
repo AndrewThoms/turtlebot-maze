@@ -1,0 +1,8 @@
+services:
+  demo-world:
+    command:
+      - ros2
+      - launch
+      - tb_worlds
+      - tb_demo_world.launch.py
+      - use_aruco:=True
