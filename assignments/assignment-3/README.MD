@@ -1,5 +1,5 @@
 
-# Task 1 — Implement a VSLAM pipeline in Python
+# Task 1 - Implement a VSLAM pipeline in Python
 
 ## Overview
 
@@ -46,7 +46,7 @@ This task implements monocular visual odometry using Python, OpenCV, and the KIT
 
 
 
-# Task 2: VSLAM on Your Own Indoor Space
+# Task 2 - VSLAM on Your Own Indoor Space
 
 ## Overview
 
@@ -111,21 +111,16 @@ Both experiments successfully generated maps and camera trajectories. The indoor
 - SocketViewer "https://github.com/stella-cv/socket_viewer"
 - Assignment 3 — Visual SLAM "https://aegean.ai/aiml-common/projects/robotics/visual-slam/visual-slam"
 
-# Task 3: Integrate StellaVSLAM with Nav2
+# Task - Integrate StellaVSLAM with Nav2
 
-## 1. Objective
+## Overview
 
-Implement visual simultaneous localization and mapping (SLAM) for a simulated TurtleBot3 using StellaVSLAM and prepare the system for autonomous navigation with ROS 2 Nav2.
+This task implements VSLAM for a simulated TurtleBot3 using StellaVSLAM and prepare the system for autonomous navigation with ROS 2 Nav2. The objective is to generate a map from RGB-D camera observations rather than rely on a preloaded map.
 
-The objective is to generate a map from RGB-D camera observations rather than rely on a preloaded map.
+## Environment
 
-**Status: In progress — visual feature detection and SLAM initialization remain unresolved.**
-
-## 2. Development Environment
-
-- Ubuntu running under WSL
-- Visual Studio Code
-- Docker and Docker Compose
+- Ubuntu 24.04 (WSL)
+- Docker
 - ROS 2 Jazzy
 - Gazebo simulation
 - TurtleBot3 Waffle
@@ -134,7 +129,6 @@ The objective is to generate a map from RGB-D camera observations rather than re
 - Nav2
 - Python and OpenCV
 
-Git branch: `assignment-3-task3`
 
 ## 3. Simulation and Communication
 
