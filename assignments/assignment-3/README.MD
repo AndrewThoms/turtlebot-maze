@@ -41,25 +41,21 @@ The implementation uses KITTI ground-truth movement distances to provide transla
 ## Running the Code
 
 Install the required Python packages:
+-pip install opencv-python numpy matplotlib
 
-```bash
-pip install opencv-python numpy matplotlib
-```
 
 Place KITTI sequence 00 images and calibration files in `kitti_dataset/sequences/00/` and the ground-truth pose file in `kitti_dataset/poses/00.txt`.
 
 Run:
+-python orb_features.py
+-python essential_matrix.py
+-python triangulation.py
+-python camera_trajectory.py
 
-```bash
-python orb_features.py
-python essential_matrix.py
-python triangulation.py
-python camera_trajectory.py
-```
 
 Results are saved in the `results/` directory.
 
 ## References
 
-- [KITTI Odometry Dataset](https://www.cvlibs.net/datasets/kitti/eval_odometry.php)
-- [Monocular Visual Odometry Reference Code](https://github.com/thehummingbird/robotics_demos/tree/main/monocular_vo)
+- KITTI Odometry Dataset - https://www.cvlibs.net/datasets/kitti/eval_odometry.php
+- Monocular Visual Odometry Reference Code - https://github.com/thehummingbird/robotics_demos/tree/main/monocular_vo
