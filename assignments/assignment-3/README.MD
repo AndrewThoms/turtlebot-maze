@@ -78,7 +78,7 @@ The system successfully generated a 3D map and estimated the camera trajectory.
 
 ## Step 2: Indoor Webcam
 
-A video was recorded indoors using my laptop's camera. The camera was calibrated using OpenCV and an 8 × 6 internal-corner checkerboard. StellaVSLAM successfully initialized, generated a sparse 3D map, and estimated the camera trajectory. The youtube video of step 2 can be seen at: https://www.youtube.com/watch?v=3lRUYHLyx9Y
+A video was recorded indoors using my laptop's camera. The camera was calibrated using OpenCV and an 8 × 6 internal-corner checkerboard. StellaVSLAM successfully initialized, generated a sparse 3D map, and estimated the camera trajectory. 
 
 ### Results - saved in "task2/results/"
 
@@ -89,7 +89,9 @@ A video was recorded indoors using my laptop's camera. The camera was calibrated
 | Trajectory duration | 11.85 seconds |
 | Calibration RMS error | 0.353 pixels |
 
-### Camera Trajectory   - shown in "task2/results/indoor/indoor_trajectory_3d.png"
+### Camera Trajectory  - shown in "task2/results/indoor/indoor_trajectory_3d.png"
+
+### Youtube video documenting Step2  - https://www.youtube.com/watch?v=3lRUYHLyx9Y
 
 ## Comparison
 
