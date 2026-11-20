@@ -131,6 +131,10 @@ This task implements VSLAM for a simulated TurtleBot3 using StellaVSLAM and prep
 
 The simulation and communication between components worked successfully.
 
+## Python Scripts
+
+-slam_nav2_bridge.py
+
 ### Camera Testing
 
 The TurtleBot's RGB-D camera was tested and produced:
@@ -139,9 +143,7 @@ The TurtleBot's RGB-D camera was tested and produced:
 - Depth measurements.
 - Approximately 5 frames per second.
 
-An adjustment to the camera configuration improved the images and depth measurements.
-
-However, the simulated environment contained large, nearly featureless gray surfaces.
+An adjustment to the camera configuration improved the images and depth measurements.  However, the simulated environment contained large, nearly featureless gray surfaces.
 
 Testing with OpenCV ORB showed:
 
