@@ -1,11 +1,9 @@
 
-# Task 1 — Monocular Visual Odometry
+# Task 1 — Implement a VSLAM pipeline in Python
 
 ## Overview
 
-This project implements monocular visual odometry using Python, OpenCV, and the KITTI dataset. The goal is to estimate camera movement from consecutive images and compare the estimated trajectory with the actual trajectory.
-
-The implementation is based on the [Monocular Visual Odometry C++ example](https://github.com/thehummingbird/robotics_demos/tree/main/monocular_vo).
+This project implements monocular visual odometry using Python, OpenCV, and the KITTI dataset. The goal is to estimate camera movement from consecutive images and compare the estimated trajectory with the actual trajectory. The implementation is based on the [Monocular Visual Odometry C++ example](https://github.com/thehummingbird/robotics_demos/tree/main/monocular_vo).
 
 ## Implementation
 
