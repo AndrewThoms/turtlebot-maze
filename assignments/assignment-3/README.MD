@@ -111,7 +111,7 @@ Both experiments successfully generated maps and camera trajectories. The indoor
 - SocketViewer "https://github.com/stella-cv/socket_viewer"
 - Assignment 3 — Visual SLAM "https://aegean.ai/aiml-common/projects/robotics/visual-slam/visual-slam"
 
-# Task - Integrate StellaVSLAM with Nav2
+# Task 3 - Integrate StellaVSLAM with Nav2
 
 ## Overview
 
@@ -129,17 +129,9 @@ This task implements VSLAM for a simulated TurtleBot3 using StellaVSLAM and prep
 - Nav2
 - Python and OpenCV
 
-### 1. What Was Set Up
-
-The following components were configured:
-
-- **Gazebo:** Simulated the TurtleBot and its environment.
-- **ROS 2 and Zenoh:** Provided communication between the robot and SLAM software.
-- **StellaVSLAM:** Processed RGB-D camera images to estimate the robot's position and create a map.
-
 The simulation and communication between components worked successfully.
 
-### 2. Camera Testing
+### Camera Testing
 
 The TurtleBot's RGB-D camera was tested and produced:
 
@@ -151,51 +143,11 @@ An adjustment to the camera configuration improved the images and depth measurem
 
 However, the simulated environment contained large, nearly featureless gray surfaces.
 
-### 3. Main Problem — Not Enough Visual Features
-
-StellaVSLAM needs recognizable visual features, such as corners, edges, and textures, to determine how the robot moves.
-
 Testing with OpenCV ORB showed:
 
-- Initial camera view: **0 keypoints**.
-- After rotating the robot: **5 keypoints**.
+- Initial camera view: 0 keypoints
+- After rotating the robot: 5 keypoints
 
-These results showed that the camera images did not contain enough useful visual features for reliable SLAM tracking.
+These results showed that the camera images did not contain enough useful visual features for reliable SLAM tracking. Although the simulation, camera, communication system, and StellaVSLAM processing were functioning, StellaVSLAM could not be confirmed to initialize and track the robot reliably.  The primary obstacle was the lack of recognizable visual features in the simulated environment, which prevented successful SLAM tracking and map generation.
 
-### 4. StellaVSLAM Results
 
-StellaVSLAM successfully received and processed more than 3,000 camera frames.
-
-However, the software reported:
-
-`preprocess: cannot extract any keypoints`
-
-No camera pose messages were observed during the test, and a visual map was not successfully demonstrated.
-
-### 5. Attempted Solution — ArUco Markers
-
-ArUco markers were added to the simulation to provide recognizable visual patterns.
-
-The goal was to improve feature detection and help StellaVSLAM track the robot.
-
-However, successful tracking and mapping were not demonstrated during testing.
-
-### 6. Why Task 3 Was Not Completed
-
-**The main limitation was insufficient visual features in the simulated camera images.**
-
-Although the simulation, camera, communication system, and StellaVSLAM processing were functioning, StellaVSLAM could not be confirmed to initialize and track the robot reliably.
-
-As a result:
-
-- A reliable camera trajectory was not demonstrated.
-- A visual SLAM map was not generated successfully.
-- The remaining mapping and navigation objectives could not be completed.
-
-### 7. Conclusion
-
-Task 3 was partially completed. The simulation and StellaVSLAM infrastructure were configured and tested successfully.
-
-**The primary obstacle was the lack of recognizable visual features in the simulated environment, which prevented successful SLAM tracking and map generation.**
-
-Future work would focus on improving the simulated environment's textures and visual features, verifying camera tracking, and then continuing with mapping and navigation.
