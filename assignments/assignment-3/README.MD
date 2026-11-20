@@ -3,16 +3,16 @@
 
 ## Overview
 
-This project implements monocular visual odometry using Python, OpenCV, and the KITTI dataset. The goal is to estimate camera movement from consecutive images and compare the estimated trajectory with the actual trajectory. The implementation is based on the [Monocular Visual Odometry C++ example](https://github.com/thehummingbird/robotics_demos/tree/main/monocular_vo).
+This project implements monocular visual odometry using Python, OpenCV, and the KITTI dataset. The goal is to estimate camera movement from images and compare the estimated trajectory with the actual trajectory. The implementation is based on the Monocular Visual Odometry C++ example (https://github.com/thehummingbird/robotics_demos/tree/main/monocular_vo).
 
 ## Implementation
 
 The project performs four main steps:
 
-1. **ORB Feature Matching:** Detects and matches features between consecutive camera images.
-2. **Essential Matrix and Pose Estimation:** Calculates the camera's relative rotation and translation direction.
-3. **3D Triangulation:** Estimates the locations of 3D landmarks using matched features.
-4. **Camera Trajectory:** Estimates the camera path and compares it with KITTI ground truth.
+1. ORB Feature Matching: Detects and matches features between consecutive camera images.
+2. Essential Matrix and Pose Estimation: Calculates the camera's relative rotation and translation direction.
+3. 3D Triangulation: Estimates the locations of 3D landmarks using matched features.
+4. Camera Trajectory: Estimates the camera path and compares it with KITTI ground truth.
 
 ## Dataset
 
