@@ -7,8 +7,6 @@ This task implements monocular visual odometry using Python, OpenCV, and the KIT
 
 ## Implementation
 
-The project performs four main steps:
-
 1. ORB Feature Matching: Detects and matches features between consecutive camera images.
 2. Essential Matrix and Pose Estimation: Calculates the camera's relative rotation and translation direction.
 3. 3D Triangulation: Estimates the locations of 3D landmarks using matched features.
