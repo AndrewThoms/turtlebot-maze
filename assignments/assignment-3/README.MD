@@ -3,7 +3,7 @@
 
 ## Overview
 
-This project implements monocular visual odometry using Python, OpenCV, and the KITTI dataset. The goal is to estimate camera movement from images and compare the estimated trajectory with the actual trajectory. The implementation is based on the Monocular Visual Odometry C++ example (https://github.com/thehummingbird/robotics_demos/tree/main/monocular_vo).
+This task implements monocular visual odometry using Python, OpenCV, and the KITTI dataset. The goal is to estimate camera movement from images and compare the estimated trajectory with the actual trajectory. The implementation is based on the Monocular Visual Odometry C++ example (https://github.com/thehummingbird/robotics_demos/tree/main/monocular_vo).
 
 ## Implementation
 
@@ -16,33 +16,23 @@ The project performs four main steps:
 
 ## Dataset
 
-- KITTI Odometry Dataset — Sequence 00
-- 4,541 available images
-- First 200 frames used for trajectory estimation
+- KITTI Odometry Dataset 
 
 ## Results
 
 | Measurement | Result |
 |---|---:|
 | ORB feature matches | 1,221 |
-| Pose inliers | 820 |
 | Triangulated 3D landmarks | 820 |
 | Successful trajectory updates | 199 |
-| Skipped updates | 0 |
 | Trajectory RMSE | 10.117 m |
 | Final position error | 16.407 m |
 
-### ORB Feature Matching
+### ORB Feature Matching - shown in "results/orb_matches.png"
 
-![ORB Matches](results/orb_matches.png)
+### 3D Landmark Triangulation - shown in "results/landmarks_3d.png"
 
-### 3D Landmark Triangulation
-
-![3D Landmarks](results/landmarks_3d.png)
-
-### Camera Trajectory Comparison
-
-![Camera Trajectory](results/trajectory_comparison.png)
+### Camera Trajectory Comparison - shown in "results/trajectory_comparison.png"
 
 The estimated trajectory follows the general shape of the actual path but shows some drift as the camera moves.
 
