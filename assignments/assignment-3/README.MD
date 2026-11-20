@@ -129,99 +129,73 @@ This task implements VSLAM for a simulated TurtleBot3 using StellaVSLAM and prep
 - Nav2
 - Python and OpenCV
 
+### 1. What Was Set Up
 
-## 3. Simulation and Communication
+The following components were configured:
 
-The project uses the following Docker Compose services:
+- **Gazebo:** Simulated the TurtleBot and its environment.
+- **ROS 2 and Zenoh:** Provided communication between the robot and SLAM software.
+- **StellaVSLAM:** Processed RGB-D camera images to estimate the robot's position and create a map.
 
-| Service | Purpose |
-|---|---|
-| `zenoh-router` | Zenoh communication router |
-| `demo-world` | Gazebo TurtleBot simulation |
-| `demo-slam` | StellaVSLAM RGB-D processing |
+The simulation and communication between components worked successfully.
 
-The Zenoh ROS 2 bridge is started manually:
+### 2. Camera Testing
 
-```bash
-docker compose exec demo-world \
-  zenoh-bridge-ros2dds client --connect tcp/localhost:7447
-```
+The TurtleBot's RGB-D camera was tested and produced:
 
-The bridge must be restarted whenever the `demo-world` container is recreated.
+- RGB images at 320 × 240 resolution.
+- Depth measurements.
+- Approximately 5 frames per second.
 
-The simulation and Zenoh communication were tested successfully.
+An adjustment to the camera configuration improved the images and depth measurements.
 
-## 4. RGB-D Camera Investigation
+However, the simulated environment contained large, nearly featureless gray surfaces.
 
-The TurtleBot camera publishes:
+### 3. Main Problem — Not Enough Visual Features
 
-| Parameter | Value |
-|---|---|
-| RGB resolution | 320 × 240 |
-| RGB encoding | `rgb8` |
-| Depth encoding | `32FC1` |
-| Expected frequency | 5 Hz |
-| Measured frequency | 5.001 Hz |
+StellaVSLAM needs recognizable visual features, such as corners, edges, and textures, to determine how the robot moves.
 
-The original camera image appeared nearly uniform gray.
+Testing with OpenCV ORB showed:
 
-The camera sensor pose in `tb_worlds/urdf/gz_waffle.sdf.xacro` was changed to:
+- Initial camera view: **0 keypoints**.
+- After rotating the robot: **5 keypoints**.
 
-```xml
-<pose>0 0 0 0 0 0</pose>
-```
+These results showed that the camera images did not contain enough useful visual features for reliable SLAM tracking.
 
-This removed an additional sensor offset and improved the camera image and depth measurements.
+### 4. StellaVSLAM Results
 
-The original file was backed up as `gz_waffle.sdf.xacro.backup`.
+StellaVSLAM successfully received and processed more than 3,000 camera frames.
 
-## 5. Visual Feature Detection
+However, the software reported:
 
-OpenCV ORB was used to evaluate visual features in camera images.
+`preprocess: cannot extract any keypoints`
 
-The diagnostic detector used:
+No camera pose messages were observed during the test, and a visual map was not successfully demonstrated.
 
-```python
-orb = cv2.ORB_create(nfeatures=1000, fastThreshold=3)
-```
+### 5. Attempted Solution — ArUco Markers
 
-### Results
+ArUco markers were added to the simulation to provide recognizable visual patterns.
 
-| Camera test | ORB keypoints | Brightness standard deviation |
-|---|---:|---:|
-| Initial view with ArUco markers enabled | 0 | 15.91 |
-| After robot rotation | 5 | 21.10 |
+The goal was to improve feature detection and help StellaVSLAM track the robot.
 
-Earlier camera tests also detected only 0–1 keypoints.
+However, successful tracking and mapping were not demonstrated during testing.
 
-The camera images showed large, nearly featureless gray surfaces.
+### 6. Why Task 3 Was Not Completed
 
-**Finding:** The current camera views contain too few visual features for reliable StellaVSLAM initialization and tracking.
+**The main limitation was insufficient visual features in the simulated camera images.**
 
-## 6. StellaVSLAM Processing
+Although the simulation, camera, communication system, and StellaVSLAM processing were functioning, StellaVSLAM could not be confirmed to initialize and track the robot reliably.
 
-The `demo-slam` service successfully received and processed RGB-D frames.
+As a result:
 
-Logs showed more than 3,000 frames processed.
+- A reliable camera trajectory was not demonstrated.
+- A visual SLAM map was not generated successfully.
+- The remaining mapping and navigation objectives could not be completed.
 
-Some logs contained the warning:
+### 7. Conclusion
 
-```text
-preprocess: cannot extract any keypoints
-```
+Task 3 was partially completed. The simulation and StellaVSLAM infrastructure were configured and tested successfully.
 
-A previous direct Zenoh subscription to `tb/slam/pose` received no pose messages during the observation interval.
+**The primary obstacle was the lack of recognizable visual features in the simulated environment, which prevented successful SLAM tracking and map generation.**
 
-Processing camera frames does not necessarily mean StellaVSLAM has successfully initialized or is tracking the robot.
-
-**Current status:** Camera pose publication and visual map generation have not been demonstrated.
-
-## 7. ArUco Marker Investigation
-
-The simulation includes an ArUco marker spawner:
-
-`tb_worlds/launch/aruco_marker_spawner.launch.py`
-
-Two markers are configured:
-
-| Marker | X (m) | Y (m) | Z
+Future work would focus on improving the simulated environment's textures and visual features, verifying camera tracking, and then continuing with mapping and navigation.
