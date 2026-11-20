@@ -33,10 +33,10 @@ This task implements monocular visual odometry using Python, OpenCV, and the KIT
 
 ## Python Scripts
 
--python orb_features.py
--python essential_matrix.py
--python triangulation.py
--python camera_trajectory.py
+- python orb_features.py
+- python essential_matrix.py
+- python triangulation.py
+- python camera_trajectory.py
 
 ## References
 
@@ -99,11 +99,11 @@ Both experiments successfully generated maps and camera trajectories. The indoor
 
 ## Python Scripts
 
--calibrate_webcam.py
--plot_aist_trajectory.py
--analyze_aist_tracking.py
--plot_indoor_trajectory.py
--analyze_indoor_tracking.py
+- calibrate_webcam.py
+- plot_aist_trajectory.py
+- analyze_aist_tracking.py
+- plot_indoor_trajectory.py
+- analyze_indoor_tracking.py
 
 ## References
 
@@ -133,7 +133,7 @@ The simulation and communication between components worked successfully.
 
 ## Python Scripts
 
--slam_nav2_bridge.py
+- slam_nav2_bridge.py
 
 ### Camera Testing
 
